@@ -23,12 +23,11 @@ import csv
 
 
 def lambda_handler(event, context):
-    print(__doc__)
     s3 = boto3.client("s3")
     s3v2 = boto3.resource('s3')
     if event:
-        file_obj = event["Records"][0]
-        bucketname = str(file_obj['s3']['bucket']['name'])
+        #file_obj = event["Records"][0]
+        bucketname = str("aws-crawl-trigger")
         
         fileObj = s3.get_object(Bucket=bucketname, Key="crawltext.txt")
         file_content = fileObj["Body"].read().decode('utf-8')
@@ -43,11 +42,6 @@ def lambda_handler(event, context):
         
         last_feed = datetime.datetime.strptime(feed.entries[0].published, '%a, %d %b %Y %H:%M:%S %Z')
         #websites last entry's publish time - last_feed
-        
-        
-        
-        
-        
 
         if last_execute == last_feed:
             print("all is update")   #if there is no new entry, exit script
@@ -68,16 +62,17 @@ def lambda_handler(event, context):
         body_list = []
         
         for val in link_list:
-            full_para =""
+            final_para =""
             soup2 = BeautifulSoup(urllib.request.urlopen(val).read(),"html.parser")
             b_tags = soup2.find_all("p") #find all <p> items from html page resource
             
             for i in b_tags:
                 #collecting paragraphs
-                final_para = " ".join(full_para.split())
+                full_para = i.text
+                final_para = final_para+full_para
                 print(final_para)
                 
-            body_list.append(final_para)
+            body_list.append(" ".join(final_para.split()))
     #--------------------------------------------------------------------#        
     feed = feedparser.parse('https://www.mindbodygreen.com/rss/feed.xml')        
     key2 = 'crawltext.txt'
@@ -95,27 +90,11 @@ def lambda_handler(event, context):
     #Only then you can write the data into the '/tmp' folder.
     rows = zip(title_list,link_list,body_list)
     with open('/tmp/mycrawrecord.csv', 'w') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f,delimiter=';')
         for row in rows:
             writer.writerow(row)
            
     #upload the data into s3
     bucket = s3v2.Bucket(bucketname)
     bucket.upload_file('/tmp/mycrawrecord.csv', key)
-    
-    
-    
-    
-          
-    
-    
-   
-
-        
-
-    
-    
-  
-    
-    
     
