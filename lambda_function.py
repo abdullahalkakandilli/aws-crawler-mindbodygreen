@@ -72,7 +72,7 @@ def lambda_handler(event, context):
                 final_para = final_para+full_para
                 print(final_para)
                 
-            body_list.append(" ".join(final_para.split()))
+            body_list.append(" ".join(final_para.strip()))
     #--------------------------------------------------------------------#        
     feed = feedparser.parse('https://www.mindbodygreen.com/rss/feed.xml')        
     key2 = 'crawltext.txt'
